@@ -11,7 +11,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let headers = rdr.headers()?;
     let metadata = headers
         .iter()
-        .map(|h| ":---".to_string())
+        .map(|_| ":---".to_string())
         .collect::<Vec<String>>();
     let header_row = headers
         .iter()
