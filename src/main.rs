@@ -1,9 +1,30 @@
 extern crate csv;
+use std::env;
+use std::fs::File;
+use std::io::{self, BufReader, Read};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let mut rdr: csv::Reader<std::fs::File> = csv::ReaderBuilder::new()
+    let mut buffer = String::new();
+    match env::args().skip(1).next() {
+        None => {
+            let stdin = io::stdin();
+            let mut handle = stdin.lock();
+            handle
+                .read_to_string(&mut buffer)
+                .expect("failed to read from standard input");
+        }
+        Some(file) => {
+            let file = File::open(&file).expect("failed to open file");
+            let mut handle = BufReader::new(file);
+            handle
+                .read_to_string(&mut buffer)
+                .expect("failed to read from file");
+        }
+    }
+
+    let mut rdr: csv::Reader<&[u8]> = csv::ReaderBuilder::new()
         .has_headers(true)
-        .from_path("input.csv")?;
+        .from_reader(buffer.as_bytes());
 
     let mut out = String::new();
 
@@ -11,7 +32,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let headers = rdr.headers()?;
     let metadata = headers
         .iter()
-        .map(|h| ":---".to_string())
+        .map(|_| ":---".to_string())
         .collect::<Vec<String>>();
     let header_row = headers
         .iter()
