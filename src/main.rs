@@ -8,30 +8,14 @@ struct Args {
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let mut buffer = String::new();
     let args = Args {
         file: env::args().skip(1).next(),
     };
-    match args.file {
-        None => {
-            let stdin = io::stdin();
-            let mut handle = stdin.lock();
-            handle
-                .read_to_string(&mut buffer)
-                .expect("failed to read from standard input");
-        }
-        Some(file) => {
-            let file = File::open(&file).expect("failed to open file");
-            let mut handle = BufReader::new(file);
-            handle
-                .read_to_string(&mut buffer)
-                .expect("failed to read from file");
-        }
-    }
+    let content = get_content(args)?;
 
     let mut rdr: csv::Reader<&[u8]> = csv::ReaderBuilder::new()
         .has_headers(true)
-        .from_reader(buffer.as_bytes());
+        .from_reader(content.as_bytes());
 
     let mut out = String::new();
 
@@ -60,4 +44,25 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("{}", out);
     Ok(())
+}
+
+fn get_content(args: Args) -> Result<String, Box<dyn std::error::Error>> {
+    let mut buffer = String::new();
+    match args.file {
+        None => {
+            let stdin = io::stdin();
+            let mut handle = stdin.lock();
+            handle
+                .read_to_string(&mut buffer)
+                .expect("failed to read from standard input");
+        }
+        Some(file) => {
+            let file = File::open(&file).expect("failed to open file");
+            let mut handle = BufReader::new(file);
+            handle
+                .read_to_string(&mut buffer)
+                .expect("failed to read from file");
+        }
+    }
+    Ok(buffer)
 }
