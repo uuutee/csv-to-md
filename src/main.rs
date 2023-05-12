@@ -3,9 +3,16 @@ use std::env;
 use std::fs::File;
 use std::io::{self, BufReader, Read};
 
+struct Args {
+    file: Option<String>,
+}
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut buffer = String::new();
-    match env::args().skip(1).next() {
+    let args = Args {
+        file: env::args().skip(1).next(),
+    };
+    match args.file {
         None => {
             let stdin = io::stdin();
             let mut handle = stdin.lock();
