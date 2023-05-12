@@ -17,6 +17,32 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .has_headers(true)
         .from_reader(content.as_bytes());
 
+    print_as_markdown(rdr)?;
+    Ok(())
+}
+
+fn get_content(args: Args) -> Result<String, Box<dyn std::error::Error>> {
+    let mut buffer = String::new();
+    match args.file {
+        None => {
+            let stdin = io::stdin();
+            let mut handle = stdin.lock();
+            handle
+                .read_to_string(&mut buffer)
+                .expect("failed to read from standard input");
+        }
+        Some(file) => {
+            let file = File::open(&file).expect("failed to open file");
+            let mut handle = BufReader::new(file);
+            handle
+                .read_to_string(&mut buffer)
+                .expect("failed to read from file");
+        }
+    }
+    Ok(buffer)
+}
+
+fn print_as_markdown(mut rdr: csv::Reader<&[u8]>) -> Result<(), Box<dyn std::error::Error>> {
     let mut out = String::new();
 
     // テーブルヘッダーの取得と出力
@@ -44,25 +70,4 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("{}", out);
     Ok(())
-}
-
-fn get_content(args: Args) -> Result<String, Box<dyn std::error::Error>> {
-    let mut buffer = String::new();
-    match args.file {
-        None => {
-            let stdin = io::stdin();
-            let mut handle = stdin.lock();
-            handle
-                .read_to_string(&mut buffer)
-                .expect("failed to read from standard input");
-        }
-        Some(file) => {
-            let file = File::open(&file).expect("failed to open file");
-            let mut handle = BufReader::new(file);
-            handle
-                .read_to_string(&mut buffer)
-                .expect("failed to read from file");
-        }
-    }
-    Ok(buffer)
 }
