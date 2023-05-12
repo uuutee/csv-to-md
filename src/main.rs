@@ -13,7 +13,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
     let content = get_content(args)?;
 
-    let mut rdr: csv::Reader<&[u8]> = csv::ReaderBuilder::new()
+    let rdr: csv::Reader<&[u8]> = csv::ReaderBuilder::new()
         .has_headers(true)
         .from_reader(content.as_bytes());
 
