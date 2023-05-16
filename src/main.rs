@@ -3,9 +3,27 @@ use std::env;
 use std::fs::File;
 use std::io::{self, BufReader, Read};
 
+struct Args {
+    file: Option<String>,
+}
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let args = Args {
+        file: env::args().skip(1).next(),
+    };
+    let content = get_content(args)?;
+
+    let rdr: csv::Reader<&[u8]> = csv::ReaderBuilder::new()
+        .has_headers(true)
+        .from_reader(content.as_bytes());
+
+    print_as_markdown(rdr)?;
+    Ok(())
+}
+
+fn get_content(args: Args) -> Result<String, Box<dyn std::error::Error>> {
     let mut buffer = String::new();
-    match env::args().skip(1).next() {
+    match args.file {
         None => {
             let stdin = io::stdin();
             let mut handle = stdin.lock();
@@ -21,11 +39,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .expect("failed to read from file");
         }
     }
+    Ok(buffer)
+}
 
-    let mut rdr: csv::Reader<&[u8]> = csv::ReaderBuilder::new()
-        .has_headers(true)
-        .from_reader(buffer.as_bytes());
-
+fn print_as_markdown(mut rdr: csv::Reader<&[u8]>) -> Result<String, Box<dyn std::error::Error>> {
     let mut out = String::new();
 
     // テーブルヘッダーの取得と出力
@@ -52,5 +69,27 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     println!("{}", out);
-    Ok(())
+    Ok(out)
+}
+
+#[test]
+fn test_get_content() {
+    let args = Args {
+        file: Some("test/input.csv".to_string()),
+    };
+    let content = get_content(args).unwrap();
+    assert_eq!(content, "\"column1\",\"column2\",\"column3\"\n\"value1\",\"value2\",\"value3\"");
+}
+
+#[test]
+fn test_print_as_markdown() {
+    let content = "\"column1\",\"column2\",\"column3\"\n\"value1\",\"value2\",\"value3\"";
+    let rdr: csv::Reader<&[u8]> = csv::ReaderBuilder::new()
+        .has_headers(true)
+        .from_reader(content.as_bytes());
+    let result = print_as_markdown(rdr);
+    assert_eq!(
+        result.unwrap(),
+        "| column1 | column2 | column3 |\n|:--- | :--- | :---|\n| value1 | value2 | value3 |\n"
+    );
 }
