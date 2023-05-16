@@ -71,3 +71,12 @@ fn print_as_markdown(mut rdr: csv::Reader<&[u8]>) -> Result<(), Box<dyn std::err
     println!("{}", out);
     Ok(())
 }
+
+#[test]
+fn test_get_content() {
+    let args = Args {
+        file: Some("test/input.csv".to_string()),
+    };
+    let content = get_content(args).unwrap();
+    assert_eq!(content, "\"column1\",\"column2\",\"column3\"\n\"value1\",\"value2\",\"value3\"");
+}
