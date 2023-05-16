@@ -42,7 +42,7 @@ fn get_content(args: Args) -> Result<String, Box<dyn std::error::Error>> {
     Ok(buffer)
 }
 
-fn print_as_markdown(mut rdr: csv::Reader<&[u8]>) -> Result<(), Box<dyn std::error::Error>> {
+fn print_as_markdown(mut rdr: csv::Reader<&[u8]>) -> Result<String, Box<dyn std::error::Error>> {
     let mut out = String::new();
 
     // テーブルヘッダーの取得と出力
@@ -69,7 +69,7 @@ fn print_as_markdown(mut rdr: csv::Reader<&[u8]>) -> Result<(), Box<dyn std::err
     }
 
     println!("{}", out);
-    Ok(())
+    Ok(out)
 }
 
 #[test]
@@ -79,4 +79,17 @@ fn test_get_content() {
     };
     let content = get_content(args).unwrap();
     assert_eq!(content, "\"column1\",\"column2\",\"column3\"\n\"value1\",\"value2\",\"value3\"");
+}
+
+#[test]
+fn test_print_as_markdown() {
+    let content = "\"column1\",\"column2\",\"column3\"\n\"value1\",\"value2\",\"value3\"";
+    let rdr: csv::Reader<&[u8]> = csv::ReaderBuilder::new()
+        .has_headers(true)
+        .from_reader(content.as_bytes());
+    let result = print_as_markdown(rdr);
+    assert_eq!(
+        result.unwrap(),
+        "| column1 | column2 | column3 |\n|:--- | :--- | :---|\n| value1 | value2 | value3 |\n"
+    );
 }
